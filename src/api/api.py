@@ -19,4 +19,4 @@ class FastApi:
             self.app.include_router(router.router, prefix=router.prefix)
 
     def start(self) -> None:
-        uvicorn.run(self.app, host='0.0.0.0', port=6000)
+        uvicorn.run(self.app, host='0.0.0.0', port=3030)

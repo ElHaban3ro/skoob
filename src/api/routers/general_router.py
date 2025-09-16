@@ -7,5 +7,5 @@ class GeneralRouter:
         self.router: APIRouter = APIRouter() 
 
         @self.router.get('/', tags=['General'])
-        def ping() -> dict[str, str]:
-            return {'ping': 'pong!'}
+        def base() -> dict[str, str]:
+            return {'response': 'what are you doing here? tomátela'}
