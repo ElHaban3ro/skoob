@@ -1,10 +1,21 @@
 from sqlalchemy import Column, Integer, String
 from src.db.declarative_base import Base
 
-class UserModel(Base):
+class UsersModel(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
-    image = Column(String, nullable=False)
-    type = Column(String, default='google')  # e.g., 'google', 'x', 'facebook'.
+    image = Column(String, nullable=True)
+    user_type = Column(String, default='google')  # e.g., 'google', 'x', 'facebook'.
+    role = Column(String, default='user')  # e.g., 'user', 'admin'.
+
+    def serialize(self) -> dict[str, object]:
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'image': self.image,
+            'type': self.user_type,
+            'role': self.role
+        }

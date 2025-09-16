@@ -2,9 +2,12 @@ from fastapi import FastAPI
 from src.api.routers.general_router import GeneralRouter
 import uvicorn
 
+from src.services.core_services import CoreServices
+
 class FastApi:
-    def __init__(self) -> None:
+    def __init__(self, services: CoreServices) -> None:
         self.app: FastAPI = FastAPI(debug=True)
+        self.services = services
         self.add_routers()
 
     def run(self) -> None:
@@ -15,7 +18,7 @@ class FastApi:
         routers = [GeneralRouter]
         
         for router in routers:
-            router = router()
+            router = router(self.services)
             self.app.include_router(router.router, prefix=router.prefix)
 
     def start(self) -> None:

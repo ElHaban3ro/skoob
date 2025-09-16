@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine, URL
-from sqlalchemy.orm import Session
 from src.db.declarative_base import Base
 
 class DbConnection:
@@ -22,6 +21,5 @@ class DbConnection:
             host=self.DB_HOST,
             port=self.DB_PORT,
             database=self.DB_NAME
-        ), echo=True)
+        ))
         Base.metadata.create_all(self.engine)
-        self.session = Session(self.engine)
