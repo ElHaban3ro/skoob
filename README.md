@@ -23,6 +23,8 @@ Este es un pequeño proyecto de [Fernando Leguizamo](https://x.com/ElHaban3ro) l
 
 
 ---
----
+
+[![Watch the video](https://img.youtube.com/vi/QtXbohidGb4/0.jpg)](https://www.youtube.com/watch?v=QtXbohidGb4)
+
 ---
 pd: dato curioso, el nombre 'skoob' viene de girar la palabra 'books'. Me encanta xD.
