@@ -20,3 +20,9 @@ Este es un pequeño proyecto de [Fernando Leguizamo](https://x.com/ElHaban3ro) l
 ---
 
 ***«La incomprensión del presente nace fatalmente de la ignorancia del pasado»***
+
+
+---
+---
+---
+pd: dato curioso, el nombre 'skoob' viene de girar la palabra 'books'. Me encanta xD.
