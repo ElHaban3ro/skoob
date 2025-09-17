@@ -8,7 +8,7 @@ services = CoreServices(db.engine) # Servicios.
 
 ## TODO: SACAR ESTO
 if not services.user_exist('ferdhaban@gmail.com'):
-    services.create_admin_user('somaz', 'ferdhaban@gmail.com', user_type='local')
+    services.create_admin_user('somaz', 'ferdhaban@gmail.com', 'mypassword', user_type='email')
 ## TODO: =====================
 
 api = FastApi(services)

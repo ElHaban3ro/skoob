@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ARRAY
 from src.db.declarative_base import Base
 
 class UsersModel(Base):
@@ -6,16 +6,19 @@ class UsersModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
+    password = Column(String, nullable=True)  # Nullable for OAuth users.
+    tokens = Column(ARRAY(String), default=[])  # Store active tokens.
     image = Column(String, nullable=True)
-    user_type = Column(String, default='google')  # e.g., 'google', 'x', 'facebook'.
+    user_type = Column(String, default='google')  # e.g., 'google', 'email'.
     role = Column(String, default='user')  # e.g., 'user', 'admin'.
 
-    def serialize(self) -> dict[str, object]:
+    def serialize(self, retireve_password: bool = False) -> dict[str, object]:
         return {
             'id': self.id,
             'name': self.name,
             'email': self.email,
+            'password': self.password if retireve_password else None,
             'image': self.image,
             'type': self.user_type,
-            'role': self.role
+            'role': self.role,
         }
