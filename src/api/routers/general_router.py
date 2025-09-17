@@ -1,5 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
+from fastapi.responses import Response
 from src.services.core_services import CoreServices
+from src.utils.http.response_utils import HttpResponses
 
 class GeneralRouter:
     def __init__(self, services: CoreServices) -> None:
@@ -7,6 +9,13 @@ class GeneralRouter:
         self.router: APIRouter = APIRouter() 
 
         @self.router.get('/', tags=['General'])
-        def base() -> dict[str, object]:
+        def base(response: Response) -> dict[str, object]:
             all_users = services.get_all_users()
-            return {'response': 'what are you doing here? tomátela', 'test': [user.serialize() for user in all_users]}
+            return HttpResponses.standard_response(
+                response=response,
+                status_code=status.HTTP_200_OK,
+                status_title='Ok',
+                content_response={
+                    'ping': 'pong'
+                }
+            )
