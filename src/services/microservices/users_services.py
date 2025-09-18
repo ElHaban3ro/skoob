@@ -3,7 +3,7 @@ from typing import Annotated, Optional, Union
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from src.models.users_model import UsersModel
 from src.services.microservices.security_services import SecurityServices
 import datetime
@@ -25,7 +25,7 @@ class UsersServices:
         
     def get_user(self, email: str) -> Optional[UsersModel]:
         with Session(self.engine) as session:
-            return session.query(UsersModel).filter(UsersModel.email == email).first()
+            return session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
 
     def user_exist(self, email: str) -> bool:
         with Session(self.engine) as session:

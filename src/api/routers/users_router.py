@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Depends
 from fastapi.responses import Response
 from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
-
+from src.models.users_model import UsersModel
 
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,13 +14,14 @@ class UsersRouter:
         
 
         @self.router.get('/me', tags=['Users'])
-        def get_me(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:            
+        def get_me(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:        
+            user: UsersModel = user.serialize()
             return HttpResponses.standard_response(
                 response=response,
                 status_code=status.HTTP_200_OK,
                 status_title='Ok',
                 content_response={
-                    'content': user.serialize()
+                    'content': user
                 }
             )
         
@@ -46,6 +47,18 @@ class UsersRouter:
             token = services.create_user_token(email)
             status.HTTP_200_OK
             return {'access_token': token, 'token_type': 'bearer'}
+
+        @self.router.get('/all', tags=['Users'])
+        def get_all_users(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
+            users = services.get_all_users()
+            return HttpResponses.standard_response(
+                response=response,
+                status_code=status.HTTP_200_OK,
+                status_title='Ok',
+                content_response={
+                    'content': [user.serialize() for user in users]
+                }
+            )
 
         @self.router.post('/register', tags=['Users'])
         def user_register(response: Response, email: str, password: str, name: str) -> dict[str, object]:

@@ -1,5 +1,7 @@
 from sqlalchemy import Column, Integer, String, ARRAY
+from sqlalchemy.orm import relationship
 from src.db.declarative_base import Base
+from src.models.books_model import BooksModel
 
 class UsersModel(Base):
     __tablename__ = 'users'
@@ -12,6 +14,8 @@ class UsersModel(Base):
     user_type = Column(String, default='google')  # e.g., 'google', 'email'.
     role = Column(String, default='user')  # e.g., 'user', 'admin'.
 
+    books = relationship(BooksModel, back_populates='owner', cascade="all, delete-orphan")
+
     def serialize(self, retireve_password: bool = False) -> dict[str, object]:
         return {
             'id': self.id,
@@ -21,4 +25,5 @@ class UsersModel(Base):
             'image': self.image,
             'type': self.user_type,
             'role': self.role,
+            'books': [book.id for book in self.books]
         }

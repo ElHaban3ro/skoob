@@ -8,10 +8,12 @@ from fastapi import UploadFile
 from sqlalchemy import Engine
 import uuid
 import zipfile
+from sqlalchemy.orm import Session
 from lxml import etree
 import pprint
 
 from src.models.users_model import UsersModel
+from src.models.books_model import BooksModel
 from src.utils.http.response_utils import HttpResponses
 
 class BooksServices:
@@ -34,7 +36,7 @@ class BooksServices:
 
         self.engine: Engine = self.engine
 
-    def save_book(self, file: UploadFile, user: UsersModel) -> None:
+    def save_book(self, file: UploadFile, user: UsersModel) -> BooksModel:
         path = Path(file.filename) # lo convertimos a formato path.
         if path.suffix not in self.books_sufix: # verificamos que el formato sea correcto.
             raise HTTPException(
@@ -56,7 +58,6 @@ class BooksServices:
         
         # Guardamos el path del archivo original.
         original_file_path = saving_folder / filename
-        extracted_folder = None
 
         # Guardamos el archivo.
         with open(original_file_path, 'wb') as buffer:
@@ -65,7 +66,32 @@ class BooksServices:
 
         # Descomprimimos el archivo si es un .epub
         if path.suffix == '.epub':
-            self.process_epub_book(original_file_path, saving_folder)
+            book_content = {'type': 'epub', 'data': self.process_epub_book(original_file_path, saving_folder)}
+        else:
+            pass
+
+        book = BooksModel(
+            title=book_content['data']['medatada']['title'],
+            description=book_content['data']['medatada']['description'],
+            author=book_content['data']['medatada']['creator'],
+            contributor=book_content['data']['medatada']['contributor'],
+            category=book_content['data']['medatada']['category'],
+            publish_date=book_content['data']['medatada']['publish_date'],
+            publisher=book_content['data']['medatada']['publisher'],
+            language=book_content['data']['medatada']['language'],
+            main_folder_path=str(saving_folder),
+            original_file_path=str(original_file_path),
+            opf_path=book_content['data']['medatada']['content_table_path'],
+            metadata_path=str(book_content['data']['metadata_base_file_path']),
+            toc_path=book_content['data']['medatada']['content_table_path'],
+            owner_id=user.id
+        )
+        with Session(self.engine) as session:
+            session.add(book)
+            session.commit()
+            session.refresh(book)
+
+        return book
 
     def process_epub_book(self, original_file_path: PosixPath, saving_folder: PosixPath) -> None:
         """_summary_
@@ -93,11 +119,9 @@ class BooksServices:
 
         # El archivo OPF contiene los metadatos del libro. Generamos su path.
         opf_path = extracted_folder / _rootfile_.get('full-path')
-        
-        book_info = self.read_opf(opf_path, saving_folder)
-        pprint.pprint(book_info)
-                
-
+        metadata = self.read_opf(opf_path, saving_folder)
+        metadata['metadata_base_file_path'] = str(opf_path.parent)
+        return metadata
 
     def read_opf(self, opf_path: PosixPath, saving_path: PosixPath) -> dict:
         """Lee el archivo OPF y extrae los metadatos del libro.
@@ -131,14 +155,14 @@ class BooksServices:
         
         # Extraemos los metadatos específicos.
         metadata = {
-            'title': metadata.find('dc:title', namespaces=self.opf_namespaces).text,
-            'description': metadata.find('dc:description', namespaces=self.opf_namespaces).text,
-            'creator': metadata.find('dc:creator', namespaces=self.opf_namespaces).text,
-            'contributor': metadata.find('dc:contributor', namespaces=self.opf_namespaces).text,
-            'category': metadata.find('dc:subject', namespaces=self.opf_namespaces).text,
-            'publish_date': metadata.find('dc:date', namespaces=self.opf_namespaces).text,
-            'publisher': metadata.find('dc:publisher', namespaces=self.opf_namespaces).text,
-            'language': metadata.find('dc:language', namespaces=self.opf_namespaces).text,
+            'title': metadata.find('dc:title', namespaces=self.opf_namespaces).text if metadata.find('dc:title', namespaces=self.opf_namespaces) is not None else 'Unknown, the aventures of Fernando',
+            'description': metadata.find('dc:description', namespaces=self.opf_namespaces).text if metadata.find('dc:description', namespaces=self.opf_namespaces) is not None else 'No description.',
+            'creator': metadata.find('dc:creator', namespaces=self.opf_namespaces).text if metadata.find('dc:creator', namespaces=self.opf_namespaces) is not None else 'Unknown',
+            'contributor': metadata.find('dc:contributor', namespaces=self.opf_namespaces).text if metadata.find('dc:contributor', namespaces=self.opf_namespaces) is not None else 'ElHaban3ro (Unknown)',
+            'category': metadata.find('dc:subject', namespaces=self.opf_namespaces).text if metadata.find('dc:subject', namespaces=self.opf_namespaces) is not None else None,
+            'publish_date': metadata.find('dc:date', namespaces=self.opf_namespaces).text if metadata.find('dc:date', namespaces=self.opf_namespaces) is not None else None,
+            'publisher': metadata.find('dc:publisher', namespaces=self.opf_namespaces).text if metadata.find('dc:publisher', namespaces=self.opf_namespaces) is not None else None,
+            'language': metadata.find('dc:language', namespaces=self.opf_namespaces).text if metadata.find('dc:language', namespaces=self.opf_namespaces) is not None else None,
         }
 
         # Accedemos a los elementos que 
@@ -162,7 +186,7 @@ class BooksServices:
             # Buscamos el elemento que contiene el path del TOC.
             toc_obj = root.find(f".//opf:item[@id='{toc_ref}']", namespaces=self.opf_namespaces)
             # Guardamos el path del TOC en los metadatos.
-            metadata['content_table_path'] = opf_path.parent / toc_obj.get('href')
+            metadata['content_table_path'] = str(opf_path.parent / toc_obj.get('href'))
 
             # Parseamos el archivo NCX (TOC).
             toc_tree = etree.parse(metadata['content_table_path'])

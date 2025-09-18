@@ -14,12 +14,13 @@ class BooksRouter:
 
         @self.router.post('/upload', tags=['Books'])
         def upload_book(response: Response, user: Annotated[str, Depends(services.get_current_user)], file: UploadFile = File(...)) -> dict[str, object]:
-            services.save_book(file, user) # Guarda el libro, valida su formato y más.
+            book = services.save_book(file, user) # Guarda el libro, valida su formato y más.
 
             return HttpResponses.standard_response(
                 response=response,
                 status_code=status.HTTP_200_OK,
                 status_title='Ok',
                 content_response={
+                    'content': book.serialize()
                 }
             )
