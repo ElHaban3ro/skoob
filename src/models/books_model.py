@@ -25,6 +25,8 @@ class BooksModel(Base):
     metadata_path = Column(String, nullable=False)
     toc_path = Column(String, nullable=True)
 
+    book_type = Column(String, nullable=False)  # epub, pdf.
+
     owner_id = Column(Integer, ForeignKey('users.id'))
     owner = relationship('UsersModel', back_populates='books')
 

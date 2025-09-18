@@ -84,7 +84,8 @@ class BooksServices:
             opf_path=book_content['data']['medatada']['content_table_path'],
             metadata_path=str(book_content['data']['metadata_base_file_path']),
             toc_path=book_content['data']['medatada']['content_table_path'],
-            owner_id=user.id
+            owner_id=user.id,
+            book_type='epub' if path.suffix == '.epub' else 'pdf',
         )
         with Session(self.engine) as session:
             session.add(book)
@@ -202,3 +203,26 @@ class BooksServices:
                 nav_path = opf_path.parent / navpoint.find('ncx:content', namespaces=self.ncx_namespaces).get('src')
                 toc[nav_label] = str(nav_path)
         return {'medatada': metadata, 'toc': toc, 'book_content': book_content}
+    
+    def get_book(self, id: int) -> BooksModel:
+        with Session(self.engine) as session:
+            book = session.query(BooksModel).filter(BooksModel.id == id).first()
+            return book
+        
+    def get_all_books(self) -> list[BooksModel]:
+        with Session(self.engine) as session:
+            books = session.query(BooksModel).all()
+            return books
+        
+    def delete_book(self, id: int) -> bool:
+        with Session(self.engine) as session:
+            book = session.query(BooksModel).filter(BooksModel.id == id).first()
+            if not book:
+                return False
+            # Eliminamos el libro de la base de datos.
+            session.delete(book)
+            session.commit()
+            # Eliminamos los archivos del libro.
+            if Path(book.main_folder_path).exists():
+                shutil.rmtree(book.main_folder_path)
+            return True
