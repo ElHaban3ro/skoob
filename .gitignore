@@ -6,6 +6,15 @@ __pycache__/
 # C extensions
 *.so
 
+content/books/*.zip
+./content/books/*.zip
+
+content/books/*.epub
+./content/books/*.epub
+
+content/books/*.pdf
+./content/books/*.pdf
+
 # Distribution / packaging
 .Python
 build/
