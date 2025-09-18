@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:identifier id="BookId" opf:scheme="UUID">urn:uuid:2be93758-5c1d-449d-a778-07c4df16bacd</dc:identifier>
+    <dc:title>Harry Potter y la piedra filosofal</dc:title>
+    <dc:subject>Fantástica, Infantil, Juvenil</dc:subject>
+    <dc:creator opf:role="aut">J.K. Rowling</dc:creator>
+    <dc:description>Harry Potter se ha quedado huérfano y vive en casa de sus abominables tíos y del insoportable primo Dudley. Harry se siente muy triste y solo, hasta que un buen día recibe una carta que cambiará su vida para siempre. En ella le comunican que ha sido aceptado como alumno en el colegio interno Hogwarts de magia y hechicería. A partir de ese momento, la suerte de Harry da un vuelco espectacular. En esa escuela tan especial aprenderá encantamientos, trucos fabulosos y tácticas de defensa contra las malas artes. Se convertirá en el campeón escolar de quidditch, especie de fútbol aéreo que se juega montado sobre escobas, y se hará un puñado de buenos amigos... aunque también algunos temibles enemigos. Pero sobre todo, conocerá los secretos que le permitirán cumplir con su destino. Pues, aunque no lo parezca a primera vista, Harry no es un chico común y corriente. ¡Es un mago!</dc:description>
+    <dc:date opf:event="publication">1997-01-01</dc:date>
+    <dc:publisher>EpubGratis.me</dc:publisher>
+    <dc:language>es</dc:language>
+    <meta content="0.5.3" name="Sigil version" />
+    <meta name="cover" content="cover.jpg" />
+    <meta content="Harry Potter" name="calibre:series" />
+    <meta content="1" name="calibre:series_index" />
+  </metadata>
+  <manifest>
+    <item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml" />
+    <item href="Images/cover.jpg" id="cover.jpg" media-type="image/jpeg" />
+    <item href="Text/cubierta.xhtml" id="cubierta.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/sinopsis.xhtml" id="sinopsis.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap002.xhtml" id="cap002.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap001.xhtml" id="cap001.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap003.xhtml" id="cap003.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap004.xhtml" id="cap004.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap005.xhtml" id="cap005.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap006.xhtml" id="cap006.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap007.xhtml" id="cap007.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap008.xhtml" id="cap008.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap009.xhtml" id="cap009.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap010.xhtml" id="cap010.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap011.xhtml" id="cap011.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap012.xhtml" id="cap012.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap013.xhtml" id="cap013.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap014.xhtml" id="cap014.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap015.xhtml" id="cap015.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap016.xhtml" id="cap016.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/cap017.xhtml" id="cap017.xhtml" media-type="application/xhtml+xml" />
+    <item href="Styles/style.css" id="style.css" media-type="text/css" />
+    <item href="Text/info.xhtml" id="info.xhtml" media-type="application/xhtml+xml" />
+    <item href="Images/ePUBlogo.png" id="ePUBlogo.png" media-type="image/png" />
+    <item href="Images/epubgratis.png" id="epubgratis.png" media-type="image/png" />
+    <item href="Text/titulo.xhtml" id="titulo.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/dedicatoria.xhtml" id="dedicatoria.xhtml" media-type="application/xhtml+xml" />
+    <item href="Images/autor.jpg" id="autor.jpg" media-type="image/jpeg" />
+    <item href="Text/autor.xhtml" id="autor.xhtml" media-type="application/xhtml+xml" />
+    <item href="Images/ss_chp01.jpg" id="ss_chp01.jpg" media-type="image/jpeg" />
+    <item href="Fonts/HarryP.TTF" id="HarryP.TTF" media-type="application/x-font-ttf" />
+    <item href="Images/ss_chp00.jpg" id="ss_chp00.jpg" media-type="image/jpeg" />
+    <item href="Images/stars1.jpg" id="stars1.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp02.jpg" id="ss_chp02.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp03.jpg" id="ss_chp03.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp04.jpg" id="ss_chp04.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp05.jpg" id="ss_chp05.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp06.jpg" id="ss_chp06.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp07.jpg" id="ss_chp07.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp08.jpg" id="ss_chp08.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp09.jpg" id="ss_chp09.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp10.jpg" id="ss_chp10.jpg" media-type="image/jpeg" />
+    <item href="Fonts/Rom_Ftl_Srif_bold_Std_2011.TTF" id="Rom_Ftl_Srif_bold_Std_2011.TTF" media-type="application/x-font-ttf" />
+    <item href="Images/img1.png" id="img1.png" media-type="image/png" />
+    <item href="Images/ss_chp11.jpg" id="ss_chp11.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp12.jpg" id="ss_chp12.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp13.jpg" id="ss_chp13.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp14.jpg" id="ss_chp14.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp15.jpg" id="ss_chp15.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp16.jpg" id="ss_chp16.jpg" media-type="image/jpeg" />
+    <item href="Images/ss_chp17.jpg" id="ss_chp17.jpg" media-type="image/jpeg" />
+    <item href="Text/titulo1.xhtml" id="titulo1.xhtml" media-type="application/xhtml+xml" />
+    <item href="Text/Hogwarts.xhtml" id="Hogwarts.xhtml" media-type="application/xhtml+xml" />
+    <item href="Images/Hogwarts.jpg" id="Hogwarts.jpg" media-type="image/jpeg" />
+  </manifest>
+  <spine toc="ncx">
+    <itemref idref="cubierta.xhtml" />
+    <itemref idref="sinopsis.xhtml" />
+    <itemref idref="titulo.xhtml" />
+    <itemref idref="info.xhtml" />
+    <itemref idref="titulo1.xhtml" />
+    <itemref idref="dedicatoria.xhtml" />
+    <itemref idref="cap001.xhtml" />
+    <itemref idref="cap002.xhtml" />
+    <itemref idref="cap003.xhtml" />
+    <itemref idref="cap004.xhtml" />
+    <itemref idref="cap005.xhtml" />
+    <itemref idref="cap006.xhtml" />
+    <itemref idref="cap007.xhtml" />
+    <itemref idref="cap008.xhtml" />
+    <itemref idref="cap009.xhtml" />
+    <itemref idref="cap010.xhtml" />
+    <itemref idref="cap011.xhtml" />
+    <itemref idref="cap012.xhtml" />
+    <itemref idref="cap013.xhtml" />
+    <itemref idref="cap014.xhtml" />
+    <itemref idref="cap015.xhtml" />
+    <itemref idref="cap016.xhtml" />
+    <itemref idref="cap017.xhtml" />
+    <itemref idref="Hogwarts.xhtml" />
+    <itemref idref="autor.xhtml" />
+  </spine>
+  <guide>
+    <reference href="Text/cubierta.xhtml" title="Cover" type="cover" />
+    <reference href="Text/titulo.xhtml" title="Title Page" type="title-page" />
+    <reference href="Text/info.xhtml" title="Copyright Page" type="copyright-page" />
+    <reference href="Text/dedicatoria.xhtml" title="Dedication" type="dedication" />
+    <reference href="Text/titulo1.xhtml" title="Text" type="text" />
+  </guide>
+</package>

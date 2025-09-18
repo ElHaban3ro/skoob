@@ -1,0 +1,82 @@
+@font-face{font-family:"Harry P";font-style:normal;font-weight:normal;src:url(../Fonts/HarryP.TTF)}
+
+@font-face{font-family:"Romance";font-style:normal;font-weight:normal;src:url(../Fonts/Rom_Ftl_Srif_bold_Std_2011.TTF)}
+
+/* ePUB base v2.0 epubgratis.me*/
+
+/* -------- ESTILOS NO MODIFICABLES -------- */
+body { font-family:"Times New Roman", Times, serif; margin:1em; }
+p { margin:0; text-align:justify; text-indent:1.5em; line-height:1.3em; }
+a { text-decoration:none; }
+sup, sub { font-size:0.75em; line-height:normal; }
+/* ----------------------------------------- */
+
+/* encabezados */
+h1, h2, h3, h4, h5, h6 { margin-top:5%; text-align:center; text-indent:0; -webkit-hyphens:none; adobe-hyphenate:none; -moz-hyphens:none; hyphens:none; }
+
+	h1 { font-size:1.2em; font-family:"Romance"; }
+	h2 { font-size:1.6em; }
+	h3 { font-size:1.5em; }
+	h4 { font-size:1.4em; }
+	h5 { font-size:1.3em; }
+	h6 { font-size:1.2em; }
+
+/* tipografía */
+.sans, .sans em, .sans strong { font-family:"Helvetica Neue", Helvetica, Verdana, Arial, "Trebuchet MS", Trebuchet, sans-serif; }
+.mono, .mono em, .mono strong { font-family:"Courier New", Courier, monospace; }
+
+.cursiva { font-style:italic; }
+.negrita { font-weight:bold; }
+.tachado { text-decoration:line-through; }
+.subrayado { text-decoration:underline; }
+.normal { font-style:normal; font-weight:normal; text-decoration:none; }
+
+.versalita { font-size:0.8em; } /* para texto en mayúsculas cuyo tamaño, sin embargo, es similar al de las minúsculas */
+
+/* alineación */
+.izquierda, .izquierda p { text-align:left; }
+.derecha, .derecha p { text-align:right; text-indent:0; }
+.centrado, .centrado p { text-align:center; text-indent:0; }
+.justificado, .justificado p { text-align:justify; }
+.asangre, .asangre p { text-indent:0; }
+
+/* saltos */
+.saltoinicio { margin-top:33%; }
+.salto25 { padding-top:2.5em; }
+.salto10 { padding-top:1em; }
+
+/* bloques */
+.sinmargen { margin:0; }
+.cita { margin:1.5em; }
+	.cita p{ margin:0.5em, 1.5em, 0.5em, 1.5em; }
+.bloque { page-break-inside:avoid; } /* evita que un elemento se divida entre dos páginas en algunos lectores */
+.banner { margin:1.5em 12%; padding:0.5em 1em; text-align:center; text-indent:0; border:2px solid black; border-left:none; border-right:none; }
+	.banner p { text-align:center; text-indent:0; }
+
+/* listas */
+li { text-align:justify; line-height:1.3em; }
+        
+/* ------------- AÑADE AQUÍ TUS PROPIOS ESTILOS -------------  */
+
+
+.kindleversal { font-variant:small-caps; }
+
+.titulo { 	font-family:"Romance"; 
+			font-size:2.0em; 
+			display:block; 
+			text-indent:0; 
+			text-align:center; 
+			margin: 0 0 35px 0; 
+		}
+
+.capital  {
+	font-family:"Romance";
+	font-size: 300%; 
+	float: left; 
+	margin: -0.1em 0.125em -0.2em 0em; 
+	text-indent: 0em; 
+	line-height: 1em; 
+	height: 1em;
+	}
+
+.mayusculas {font-size:0.9em;}
