@@ -50,7 +50,7 @@ class UsersServices:
             session.refresh(new_user)
             return new_user
         
-    def create_user(self, name: str, email: str, image: Optional[str] = None, password: Union[str, None] = None, user_type: str = 'google') -> UsersModel:
+    def create_user(self, name: str, email: str, image: Optional[str] = None, password: Union[str, None] = None, user_type: str = 'google', google_token: Union[str, None] = None) -> UsersModel:
         with Session(self.engine) as session:
             if password:
                 password = SecurityServices.hash_password(password)
@@ -60,6 +60,7 @@ class UsersServices:
                 password=password,
                 image=image,
                 user_type=user_type,
+                google_token=google_token,
                 role='user'
             )
             session.add(new_user)
@@ -74,20 +75,20 @@ class UsersServices:
                 return False
             return SecurityServices.verify_password(password, user.password)
         
-    def create_user_token(self, email: str) -> str:
+    def create_user_token(self, email: str, type: str) -> str:
         with Session(self.engine) as session:
             user = session.query(UsersModel).filter(UsersModel.email == email).first()
             if not user:
                 return ''
 
-            to_encode = {'sub': user.email}
+            to_encode = {'sub': user.email, 'type': 'email' if type == 'email' else 'google'}
+
             # Establecemos una expiración de 30 minutos para el token.
-            expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)
+            expire = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=10)
             to_encode.update({'exp': expire})
 
             encode_jwt = jwt.encode(to_encode, self.JWT_SECRET_KEY, algorithm='HS256')
             return encode_jwt
-        
 
     def get_current_user(self, token: Annotated[str, Depends(oauth2_scheme)]):
         """Obtiene el usuario actual a partir del token JWT.

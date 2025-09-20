@@ -1,9 +1,12 @@
-from fastapi import APIRouter, status, Depends
-from fastapi.responses import Response
+import httpx
+import os
+from fastapi import APIRouter, status, Depends, Request
+from fastapi.responses import Response, RedirectResponse
 from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
 from src.models.users_model import UsersModel
-
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from typing import Annotated, Union
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
@@ -11,7 +14,11 @@ class UsersRouter:
     def __init__(self, services: CoreServices) -> None:
         self.prefix: str = '/users'
         self.router: APIRouter = APIRouter() 
-        
+        GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+        GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
+        GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_CALLBACK_URI", "http://localhost:3030/users/auth/google/callback")
+        GOOGLE_REDIRECT_FRONTEND_URI = os.getenv("GOOGLE_REDIRECT_FRONTEND_URI", "http://localhost:3000")
+        GOOGLE_TOKEN_REQUEST_URL = "https://oauth2.googleapis.com/token"
 
         @self.router.get('/me', tags=['Users'])
         def get_me(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:        
@@ -93,9 +100,81 @@ class UsersRouter:
                     status_title='Unauthorized',
                 )
             
-            token = services.create_user_token(email)
+            token = services.create_user_token(email, 'email')
             status.HTTP_200_OK
             return {'access_token': token, 'token_type': 'bearer'}
+
+        @self.router.get('/auth/google', tags=['Users'])
+        def google_auth(response: Response) -> dict[str, object]:
+            google_auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=code&scope=openid email profile"
+            return RedirectResponse(google_auth_url)
+
+        @self.router.get('/auth/google/callback', tags=['Users'])
+        async def google_auth_callback(response: Response, request: Request, code: str) -> dict[str, object]:
+            """Receives the callback from Google OAuth2 and processes the authentication.
+
+            Args:
+                code (str): Authorization code from Google
+            """
+            data = {
+                'code': code,
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_SECRET_KEY,
+                'redirect_uri': GOOGLE_REDIRECT_URI,
+                'grant_type': 'authorization_code'
+            }
+
+            async with httpx.AsyncClient() as client:
+                response = await client.post(GOOGLE_TOKEN_REQUEST_URL, data=data)
+                response.raise_for_status()
+                token_response = response.json()
+            
+            google_token = token_response.get('id_token')
+            if not google_token:
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_title='BadRequest',
+                )
+            
+            try:
+                id_info = id_token.verify_oauth2_token(google_token, requests.Request(), GOOGLE_CLIENT_ID)
+
+                user = services.get_user(id_info['email'])
+                if not user:
+                    user = services.create_user(
+                        name=id_info.get('name'),
+                        email=id_info.get('email'),
+                        google_token=google_token,
+                        image=id_info.get('picture'),
+                        user_type='google',
+                    )
+                else:
+                    if user.user_type != 'google':
+                        return HttpResponses.standard_response(
+                            response=response,
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            status_title='BadRequest',
+                            content_response={'error': 'User registered with different method'}
+                        )
+                
+                local_token = services.create_user_token(user.email, 'google')
+
+                return {'access_token': local_token, 'token_type': 'bearer'}
+            except ValueError as e:
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_title='BadRequest',
+                    content_response={'error': str(e)}
+                )
+            except Exception as e:
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    status_title='ServerError',
+                    content_response={'error': str(e)}
+                )
 
         @self.router.get('/all', tags=['Users'])
         def get_all_users(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:

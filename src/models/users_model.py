@@ -9,6 +9,7 @@ class UsersModel(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password = Column(String, nullable=True)  # Nullable for OAuth users.
+    google_token = Column(String, nullable=True)  # Store Google OAuth token.
     #tokens = Column(ARRAY(String), default=[])  # Store active tokens.
     image = Column(String, nullable=True)
     user_type = Column(String, default='google')  # e.g., 'google', 'email'.
