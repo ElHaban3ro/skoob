@@ -25,77 +25,60 @@ class UsersRouter:
                 }
             )
         
-        @self.router.delete('/delete', tags=['Users'])
-        def delete_user(response: Response, user_id: int, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
-            user_to_delete = services.get_user_by_id(user_id)
-            if not user_to_delete or user.role != 'admin' or user.email == user_to_delete.email:
-                return HttpResponses.standard_response(
-                    response=response,
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    status_title='Forbidden',
-                )
-            services.delete_user(user_to_delete.email)
-            return HttpResponses.standard_response(
-                response=response,
-                status_code=status.HTTP_200_OK,
-                status_title='Ok',
-                content_response={
-                    'content': f'User {user_to_delete.email} deleted successfully'
-                }
-            )
         
         @self.router.put('/edit', tags=['Users'])
         def edit_user(
             response: Response,
-            user: Annotated[str, Depends(services.get_current_user)],
-            email: str,
+            current_user: Annotated[UsersModel, Depends(services.get_current_user)],
             name: Union[str, None] = None,
             password: Union[str, None] = None,
             image: Union[str, None] = None
         ) -> dict:
-            if not services.user_exist(email):
-                return HttpResponses.standard_response(
-                    response=response,
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    status_title='NotFound',
-                )
+            # Solo puede editarse a sí mismo
+            email = current_user.email
+
             edited_user = services.edit_user(
-                email=email,
-                name=name,
-                password=password,
-                image=image
+            email=email,
+            name=name,
+            password=password,
+            image=image
             )
             return HttpResponses.standard_response(
-                response=response,
-                status_code=status.HTTP_200_OK,
-                status_title='Ok',
-                content_response={
-                    'content': edited_user.serialize(return_books=False)
-                }
+            response=response,
+            status_code=status.HTTP_200_OK,
+            status_title='Ok',
+            content_response={
+                'content': edited_user.serialize(return_books=False)
+            }
             )
         
         @self.router.post('/auth', tags=['Users'])
         def auth(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> dict[str, object]:
-            email = form_data.username
+            username = form_data.username.strip().lower()
             password = form_data.password
 
-            if not services.user_exist(email):
+            token = services.create_user_token_by_username(username)
+            if token:
+                return {'access_token': token, 'token_type': 'bearer'}
+
+            email_like = username
+            if not services.user_exist(email_like):
                 return HttpResponses.standard_response(
                     response=response,
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='NotFound',
                 )
-            
-            if not services.user_credentials_are_valid(email, password):
+
+            if not services.user_credentials_are_valid(email_like, password):
                 return HttpResponses.standard_response(
                     response=response,
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     status_title='Unauthorized',
                 )
-            
-            token = services.create_user_token(email)
-            status.HTTP_200_OK
+
+            token = services.create_user_token(email_like)
             return {'access_token': token, 'token_type': 'bearer'}
+
 
         @self.router.get('/all', tags=['Users'])
         def get_all_users(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
