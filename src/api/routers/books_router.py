@@ -44,8 +44,34 @@ class BooksRouter:
                 )
             return FileResponse(path=resource_path, media_type=mimetypes.guess_type(resource_path)[0])
 
+        @self.router.get('/get/cover', tags=['Books'])
+        def get_book_cover(response: Response, book_id: int, user: Annotated[str, Depends(services.get_current_user)]) -> FileResponse:
+            """Obtiene la portada de un libro.
+
+            Args:
+                book_id (int): Id del libro.
+
+            Returns:
+                FileResponse: Devuelve la imagen de la portada del libro.
+            """            
+            book = services.get_book(book_id)
+            if not book:
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    status_title='BookNotFound',
+                )
+            if not book.cover_path or not Path(book.cover_path).exists():
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    status_title='CoverNotFound',
+                )
+            mediatype, _ = mimetypes.guess_type(book.cover_path)
+            return FileResponse(path=Path(book.cover_path), media_type=mediatype)
+
         @self.router.get('/read', tags=['Books'])
-        def read_book(response: Response, book_id: int, chapter_number: int) -> FileResponse:
+        def read_book(response: Response, book_id: int, chapter_number: int, user: Annotated[str, Depends(services.get_current_user)]) -> FileResponse:
             """Obtiene el contenido HTML de un capítulo específico de un libro.
 
             Args:
