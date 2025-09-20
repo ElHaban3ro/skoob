@@ -4,7 +4,7 @@ from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
 from src.models.users_model import UsersModel
 
-from typing import Annotated
+from typing import Annotated, Union
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 class UsersRouter:
@@ -41,6 +41,36 @@ class UsersRouter:
                 status_title='Ok',
                 content_response={
                     'content': f'User {user_to_delete.email} deleted successfully'
+                }
+            )
+        
+        @self.router.put('/edit', tags=['Users'])
+        def edit_user(
+            response: Response,
+            user: Annotated[str, Depends(services.get_current_user)],
+            email: str,
+            name: Union[str, None] = None,
+            password: Union[str, None] = None,
+            image: Union[str, None] = None
+        ) -> dict:
+            if not services.user_exist(email):
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    status_title='NotFound',
+                )
+            edited_user = services.edit_user(
+                email=email,
+                name=name,
+                password=password,
+                image=image
+            )
+            return HttpResponses.standard_response(
+                response=response,
+                status_code=status.HTTP_200_OK,
+                status_title='Ok',
+                content_response={
+                    'content': edited_user.serialize(return_books=False)
                 }
             )
         

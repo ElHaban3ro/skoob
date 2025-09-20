@@ -123,3 +123,22 @@ class UsersServices:
             session.delete(user)
             session.commit()
             return True
+        
+    def edit_user(
+            self,
+            email: str,
+            name: Optional[str] = None,
+            password: Optional[str] = None,
+            image: Optional[str] = None
+    ) -> UsersModel:
+        with Session(self.engine) as session:
+            user = session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
+            if name:
+                user.name = name
+            if password:
+                user.password = SecurityServices.hash_password(password)
+            if image:
+                user.image = image
+            session.commit()
+            session.refresh(user)
+            return user
