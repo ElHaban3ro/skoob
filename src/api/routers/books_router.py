@@ -13,7 +13,7 @@ class BooksRouter:
         self.router: APIRouter = APIRouter() 
         
         @self.router.get('/content/{book_id:int}/{path_fragments:path}', tags=['Books'])
-        def book_content_resolve(response: Response, book_id: int, path_fragments: str) -> FileResponse:
+        def book_content_resolve(response: Response, book_id: int, path_fragments: str, user: Annotated[str, Depends(services.get_current_user)]) -> FileResponse:
             """Resuelve y sirve archivos estáticos relacionados con los libros, como imágenes o estilos CSS.
 
             Args:
