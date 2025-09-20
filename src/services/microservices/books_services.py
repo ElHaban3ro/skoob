@@ -84,6 +84,8 @@ class BooksServices:
             opf_path=book_content['data']['medatada']['content_table_path'],
             metadata_path=str(book_content['data']['metadata_base_file_path']),
             toc_path=book_content['data']['medatada']['content_table_path'],
+            toc_content=book_content['data']['toc'],
+            book_content=book_content['data']['book_content'],
             owner_id=user.id,
             book_type='epub' if path.suffix == '.epub' else 'pdf',
         )

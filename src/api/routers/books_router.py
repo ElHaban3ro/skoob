@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, Depends, UploadFile, File
-from fastapi.responses import Response
+from fastapi.responses import Response, HTMLResponse
 from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
 from pathlib import Path
@@ -11,6 +11,19 @@ class BooksRouter:
         self.prefix: str = '/books'
         self.router: APIRouter = APIRouter() 
         
+        @self.router.get('/read', tags=['Books'])
+        def read_book(response: Response, book_id: int, chapter_number: int) -> HTMLResponse:
+            """Obtiene el contenido HTML de un capítulo específico de un libro.
+
+            Args:
+                book_id (int): Id del libro.
+                chapter_number (int): Número del capítulo a leer.
+
+            Returns:
+                HTMLResponse: Devuelve el contenido HTML del capítulo solicitado.
+            """            
+            
+
         @self.router.get('/get', tags=['Books'])
         def get_book(response: Response, user: Annotated[str, Depends(services.get_current_user)], id: int) -> dict[str, object]:
             book = services.get_book(id)
