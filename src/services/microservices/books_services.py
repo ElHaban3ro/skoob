@@ -9,7 +9,7 @@ from sqlalchemy import Engine
 import uuid
 import zipfile
 from sqlalchemy.orm import Session
-from lxml import etree
+from lxml import etree, html
 import pprint
 
 from src.models.users_model import UsersModel
@@ -20,7 +20,7 @@ class BooksServices:
     def __init__(self) -> None:
         super().__init__()
         self.books_sufix = ['.epub']
-
+        self.books_content_prefix = '/books/content'
         # =========================== NAMESPACES XML ============================
         # Los namespaces son como espacios que definen el contexto o grupos de 
         # elementos en un documento XML. 
@@ -93,8 +93,48 @@ class BooksServices:
             session.add(book)
             session.commit()
             session.refresh(book)
+        self.edit_book_urls(book)
 
         return book
+
+    def edit_book_urls(self, book: BooksModel) -> None:
+        """Edita las URLs de los archivos del libro para que sean accesibles desde la API.
+
+        Args:
+            book (BooksModel): Instancia del libro a editar.
+        """
+        ns = {"xlink": "http://www.w3.org/1999/xlink"}
+        for chapter in book.book_content:
+            chapter_path = Path(chapter)
+            tree = html.parse(chapter_path)
+            src_nodes = tree.xpath("//*[@src]")
+            for node in src_nodes:
+                src = node.get("src")
+                if '.' in src:
+                    src = src.replace('..', '')
+                    src = src.replace('//', '/')
+                node.set('src', f"{self.books_content_prefix}/{book.id}{src}")
+
+            href_nodes = tree.xpath("//*[@href]")
+            for node in href_nodes:
+                href = node.get("href")
+                if '.' in href:
+                    href = href.replace('..', '')
+                    href = href.replace('//', '/')
+                node.set('href', f"{self.books_content_prefix}/{book.id}{href}")
+            tree.write(chapter_path, encoding='utf-8', method='xml', pretty_print=True)
+            
+            xml_tree = etree.parse(chapter_path)
+            xlinkhref_nodes = xml_tree.xpath(f"//*[@xlink:href]", namespaces=ns)
+            print(xlinkhref_nodes)
+            for node in xlinkhref_nodes:
+                xlinkhref = node.get(f"{{{ns['xlink']}}}href")
+                print(xlinkhref)
+                if '.' in xlinkhref:
+                    xlinkhref = xlinkhref.replace('..', '')
+                    xlinkhref = xlinkhref.replace('//', '/')
+                node.set(f"{{{ns['xlink']}}}href", f"{self.books_content_prefix}/{book.id}{xlinkhref}")
+            xml_tree.write(chapter_path, encoding='utf-8', xml_declaration=True, pretty_print=True)
 
     def process_epub_book(self, original_file_path: PosixPath, saving_folder: PosixPath) -> None:
         """_summary_
@@ -228,3 +268,23 @@ class BooksServices:
             if Path(book.main_folder_path).exists():
                 shutil.rmtree(book.main_folder_path)
             return True
+        
+    def read_book(self, book_id: int, chapter: int) -> str:
+        """Obtiene la ruta del capítulo solicitado.
+
+        Args:
+            book_id (int): ID del libro.
+            chapter (int): Capítulo a leer.
+
+        Returns:
+            str: Devuelve el path del capítulo solicitado.
+        """        
+        with Session(self.engine) as session:
+            book = session.query(BooksModel).filter(BooksModel.id == book_id).first()
+            if chapter <= 0 or chapter > len(book.book_content):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="The chapter number is out of range.",
+                )
+            chapter_path = book.book_content[chapter - 1]
+            return chapter_path
