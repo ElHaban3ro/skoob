@@ -63,7 +63,7 @@ class BooksRouter:
                     status_title='BookNotFound',
                 )
             chapter_path = services.read_book(book_id, chapter_number)
-            print(chapter_path)
+
             mediatype, _ = mimetypes.guess_type(chapter_path)
             return FileResponse(path=Path(chapter_path), media_type=mediatype)
 

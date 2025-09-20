@@ -287,4 +287,9 @@ class BooksServices:
                     detail="The chapter number is out of range.",
                 )
             chapter_path = book.book_content[chapter - 1]
+            if not Path(chapter_path).exists():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="The chapter file does not exist.",
+                )
             return chapter_path
