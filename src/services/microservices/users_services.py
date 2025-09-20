@@ -21,15 +21,19 @@ class UsersServices:
     
     def get_all_users(self) -> list[UsersModel]:
         with Session(self.engine) as session:
-            return session.query(UsersModel).all()
+            return session.query(UsersModel).options(joinedload(UsersModel.books)).all()
         
     def get_user(self, email: str) -> Optional[UsersModel]:
         with Session(self.engine) as session:
             return session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
+        
+    def get_user_by_id(self, user_id: int) -> Optional[UsersModel]:
+        with Session(self.engine) as session:
+            return session.query(UsersModel).filter(UsersModel.id == user_id).options(joinedload(UsersModel.books)).first()
 
     def user_exist(self, email: str) -> bool:
         with Session(self.engine) as session:
-            return True if session.query(UsersModel).filter(UsersModel.email == email).first() else False
+            return True if session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first() else False
 
     def create_admin_user(self, name: str, email: str, password: str, user_type: str = 'google', image: Optional[str] = None) -> UsersModel:
         with Session(self.engine) as session:
@@ -65,7 +69,7 @@ class UsersServices:
         
     def user_credentials_are_valid(self, email: str, password: str) -> bool:
         with Session(self.engine) as session:
-            user: UsersModel = session.query(UsersModel).filter(UsersModel.email == email).first()
+            user: UsersModel = session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
             if not user:
                 return False
             return SecurityServices.verify_password(password, user.password)
@@ -110,3 +114,12 @@ class UsersServices:
         if user is None:
             raise credentials_exception
         return user
+
+    def delete_user(self, email: str) -> bool:
+        with Session(self.engine) as session:
+            user = session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
+            if not user:
+                return False
+            session.delete(user)
+            session.commit()
+            return True

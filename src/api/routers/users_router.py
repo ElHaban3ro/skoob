@@ -25,6 +25,25 @@ class UsersRouter:
                 }
             )
         
+        @self.router.delete('/delete', tags=['Users'])
+        def delete_user(response: Response, user_id: int, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
+            user_to_delete = services.get_user_by_id(user_id)
+            if not user_to_delete or user.role != 'admin' or user.email == user_to_delete.email:
+                return HttpResponses.standard_response(
+                    response=response,
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_title='Forbidden',
+                )
+            services.delete_user(user_to_delete.email)
+            return HttpResponses.standard_response(
+                response=response,
+                status_code=status.HTTP_200_OK,
+                status_title='Ok',
+                content_response={
+                    'content': f'User {user_to_delete.email} deleted successfully'
+                }
+            )
+        
         @self.router.post('/auth', tags=['Users'])
         def auth(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> dict[str, object]:
             email = form_data.username
@@ -80,6 +99,6 @@ class UsersRouter:
                 status_code=status.HTTP_200_OK,
                 status_title='Ok',
                 content_response={
-                    'content': user.serialize()
+                    'content': user.serialize(return_books=False)
                 }
             )

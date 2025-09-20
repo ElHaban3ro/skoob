@@ -16,7 +16,7 @@ class UsersModel(Base):
 
     books = relationship(BooksModel, back_populates='owner', cascade="all, delete-orphan")
 
-    def serialize(self, retireve_password: bool = False) -> dict[str, object]:
+    def serialize(self, retireve_password: bool = False, return_books: bool = True) -> dict[str, object]:
         return {
             'id': self.id,
             'name': self.name,
@@ -25,5 +25,5 @@ class UsersModel(Base):
             'image': self.image,
             'type': self.user_type,
             'role': self.role,
-            'books': [book.id for book in self.books]
+            'books': [book.id for book in self.books] if return_books else []
         }
