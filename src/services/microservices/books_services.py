@@ -79,6 +79,7 @@ class BooksServices:
             publish_date=book_content['data']['medatada']['publish_date'],
             publisher=book_content['data']['medatada']['publisher'],
             language=book_content['data']['medatada']['language'],
+            cover_path=book_content['data']['medatada']['cover_path'],
             main_folder_path=str(saving_folder),
             original_file_path=str(original_file_path),
             opf_path=book_content['data']['medatada']['content_table_path'],
@@ -96,6 +97,10 @@ class BooksServices:
         self.edit_book_urls(book)
 
         return book
+    
+    def safety_path(self, safety_base: PosixPath, target_path: PosixPath) -> PosixPath:
+        """Verifica que el path objetivo esté dentro del path base de seguridad.
+        """
 
     def edit_book_urls(self, book: BooksModel) -> None:
         """Edita las URLs de los archivos del libro para que sean accesibles desde la API.
@@ -126,10 +131,8 @@ class BooksServices:
             
             xml_tree = etree.parse(chapter_path)
             xlinkhref_nodes = xml_tree.xpath(f"//*[@xlink:href]", namespaces=ns)
-            print(xlinkhref_nodes)
             for node in xlinkhref_nodes:
                 xlinkhref = node.get(f"{{{ns['xlink']}}}href")
-                print(xlinkhref)
                 if '.' in xlinkhref:
                     xlinkhref = xlinkhref.replace('..', '')
                     xlinkhref = xlinkhref.replace('//', '/')
@@ -196,6 +199,16 @@ class BooksServices:
                 detail="The OPF file is missing the metadata section.",
             )
         
+        cover_id = metadata.find("opf:meta[@name='cover']", namespaces=self.opf_namespaces).get('content') if metadata.find("opf:meta[@name='cover']", namespaces=self.opf_namespaces) is not None else None
+        cover_path = None
+
+        if cover_id:
+            cover_item = root.find(f".//opf:item[@id='{cover_id}']", namespaces=self.opf_namespaces)
+            if cover_item is not None:
+                cover_path = opf_path.parent / cover_item.get('href')
+
+        print(str(cover_path))
+        
         # Extraemos los metadatos específicos.
         metadata = {
             'title': metadata.find('dc:title', namespaces=self.opf_namespaces).text if metadata.find('dc:title', namespaces=self.opf_namespaces) is not None else 'Unknown, the aventures of Fernando',
@@ -206,6 +219,7 @@ class BooksServices:
             'publish_date': metadata.find('dc:date', namespaces=self.opf_namespaces).text if metadata.find('dc:date', namespaces=self.opf_namespaces) is not None else None,
             'publisher': metadata.find('dc:publisher', namespaces=self.opf_namespaces).text if metadata.find('dc:publisher', namespaces=self.opf_namespaces) is not None else None,
             'language': metadata.find('dc:language', namespaces=self.opf_namespaces).text if metadata.find('dc:language', namespaces=self.opf_namespaces) is not None else None,
+            'cover_path': str(cover_path) if cover_path and cover_path.exists() else None,
         }
 
         # Accedemos a los elementos que 

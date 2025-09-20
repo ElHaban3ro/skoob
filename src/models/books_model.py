@@ -17,6 +17,7 @@ class BooksModel(Base):
     publish_date = Column(String, nullable=True)
     publisher = Column(String, nullable=True)
     language = Column(String, nullable=True)
+    cover_path = Column(String, nullable=True)
 
     # Paths
     main_folder_path = Column(String, nullable=False)
@@ -39,6 +40,7 @@ class BooksModel(Base):
             'title': self.title,
             'description': self.description,
             'author': self.author,
+            'cover_path': self.cover_path,
             'contributor': self.contributor,
             'category': self.category,
             'publish_date': self.publish_date,
