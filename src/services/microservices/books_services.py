@@ -69,22 +69,22 @@ class BooksServices:
             book_content = {'type': 'epub', 'data': self.process_epub_book(original_file_path, saving_folder)}
         else:
             pass
-
+            
         book = BooksModel(
-            title=book_content['data']['medatada']['title'],
-            description=book_content['data']['medatada']['description'],
-            author=book_content['data']['medatada']['creator'],
-            contributor=book_content['data']['medatada']['contributor'],
-            category=book_content['data']['medatada']['category'],
-            publish_date=book_content['data']['medatada']['publish_date'],
-            publisher=book_content['data']['medatada']['publisher'],
-            language=book_content['data']['medatada']['language'],
-            cover_path=book_content['data']['medatada']['cover_path'],
+            title=book_content['data']['metadata']['title'],
+            description=book_content['data']['metadata']['description'],
+            author=book_content['data']['metadata']['creator'],
+            contributor=book_content['data']['metadata']['contributor'],
+            category=book_content['data']['metadata']['category'],
+            publish_date=book_content['data']['metadata']['publish_date'],
+            publisher=book_content['data']['metadata']['publisher'],
+            language=book_content['data']['metadata']['language'],
+            cover_path=self.safety_path(saving_folder, book_content['data']['metadata']['cover_path']),
             main_folder_path=str(saving_folder),
             original_file_path=str(original_file_path),
-            opf_path=book_content['data']['medatada']['content_table_path'],
-            metadata_path=str(book_content['data']['metadata_base_file_path']),
-            toc_path=book_content['data']['medatada']['content_table_path'],
+            opf_path=self.safety_path(saving_folder, book_content['data']['metadata']['opf_path']),
+            metadata_path=self.safety_path(saving_folder, book_content['data']['metadata']['metadata_base_path']),
+            toc_path=self.safety_path(saving_folder, book_content['data']['metadata']['content_table_path']),
             toc_content=book_content['data']['toc'],
             book_content=book_content['data']['book_content'],
             owner_id=user.id,
@@ -98,9 +98,16 @@ class BooksServices:
 
         return book
     
-    def safety_path(self, safety_base: PosixPath, target_path: PosixPath) -> PosixPath:
-        """Verifica que el path objetivo esté dentro del path base de seguridad.
+    def safety_path(self, safety_base: PosixPath, target_path: Union[str, None] = None) -> str:
+        """Verifica que el path objetivo esté dentro del path base de seguridad. El path absoluto DEBE estar dentro del a ruta de extracción del libro, sino, se considera un intento de acceso no autorizado.
+
+        Returns:
+            str: Devuelve el path objetivo si es seguro, de lo contrario devuelve None. 
         """
+        if str(safety_base) not in str(Path(target_path).resolve()) or not target_path:
+            return None
+        return target_path
+
 
     def edit_book_urls(self, book: BooksModel) -> None:
         """Edita las URLs de los archivos del libro para que sean accesibles desde la API.
@@ -166,7 +173,9 @@ class BooksServices:
         # El archivo OPF contiene los metadatos del libro. Generamos su path.
         opf_path = extracted_folder / _rootfile_.get('full-path')
         metadata = self.read_opf(opf_path, saving_folder)
-        metadata['metadata_base_file_path'] = str(opf_path.parent)
+        print(metadata)
+        metadata['metadata']['metadata_base_path'] = str(opf_path.parent)
+        metadata['metadata']['opf_path'] = str(opf_path)
         return metadata
 
     def read_opf(self, opf_path: PosixPath, saving_path: PosixPath) -> dict:
@@ -206,8 +215,6 @@ class BooksServices:
             cover_item = root.find(f".//opf:item[@id='{cover_id}']", namespaces=self.opf_namespaces)
             if cover_item is not None:
                 cover_path = opf_path.parent / cover_item.get('href')
-
-        print(str(cover_path))
         
         # Extraemos los metadatos específicos.
         metadata = {
@@ -258,7 +265,7 @@ class BooksServices:
                 # Obtenemos el path de ese punto y lo convertimos a un path completo.
                 nav_path = opf_path.parent / navpoint.find('ncx:content', namespaces=self.ncx_namespaces).get('src')
                 toc[nav_label] = str(nav_path)
-        return {'medatada': metadata, 'toc': toc, 'book_content': book_content}
+        return {'metadata': metadata, 'toc': toc, 'book_content': book_content}
     
     def get_book(self, id: int) -> BooksModel:
         with Session(self.engine) as session:
