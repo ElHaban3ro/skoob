@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.api.routers.general_router import GeneralRouter
 from src.api.routers.users_router import UsersRouter
 from src.api.routers.books_router import BooksRouter
@@ -9,8 +10,19 @@ from dotenv import load_dotenv
 
 class FastApi:
     def __init__(self, services: CoreServices) -> None:
+        self.origins = [
+            "http://localhost",
+            "http://localhost:3000",
+        ]
         load_dotenv()
         self.app: FastAPI = FastAPI(debug=True)
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=self.origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
         #self.app.add_middleware(SessionMiddleware, os.environ.get('GOOGLE_SECRET_KEY', 'KI'))
         self.services = services
         self.add_routers()
