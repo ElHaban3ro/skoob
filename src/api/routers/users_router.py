@@ -146,11 +146,7 @@ class UsersRouter:
             
             google_token = token_response.get('id_token')
             if not google_token:
-                return HttpResponses.standard_response(
-                    response=response,
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    status_title='BadRequest',
-                )
+                return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=google_auth_failed')
             
             try:
                 id_info = id_token.verify_oauth2_token(google_token, requests.Request(), GOOGLE_CLIENT_ID)
@@ -166,30 +162,24 @@ class UsersRouter:
                     )
                 else:
                     if user.user_type != 'google':
-                        return HttpResponses.standard_response(
-                            response=response,
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            status_title='BadRequest',
-                            content_response={'error': 'User registered with different method'}
-                        )
+                        return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=user_registred_with_different_method')
                 
                 local_token = services.create_user_token(user.email, 'google')
+                resp = RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/')
+                resp.set_cookie(
+                    key="access_token",
+                    value=local_token,
+                    httponly=True,
+                    secure=False, # Require HTTP.
+                    samesite='none', # Accept different site requests.
+                    max_age=60*180 # 3 hours
+                )
+                return resp
 
-                return {'access_token': local_token, 'token_type': 'bearer'}
             except ValueError as e:
-                return HttpResponses.standard_response(
-                    response=response,
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    status_title='BadRequest',
-                    content_response={'error': str(e)}
-                )
+                return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=google_auth_failed')
             except Exception as e:
-                return HttpResponses.standard_response(
-                    response=response,
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    status_title='ServerError',
-                    content_response={'error': str(e)}
-                )
+                return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=google_auth_failed')
 
         @self.router.get('/all', tags=['Users'])
         def get_all_users(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:

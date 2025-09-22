@@ -13,7 +13,8 @@ class FastApi:
         self.origins = [
             "http://localhost",
             "http://localhost:3000",
-            "http://0.0.0.0:3000"
+            "http://0.0.0.0:3000",
+            "https://tests.evasoft.app"
         ]
         load_dotenv()
         self.app: FastAPI = FastAPI(debug=True)
