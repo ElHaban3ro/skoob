@@ -2,10 +2,11 @@ import os
 from src.services.microservices.users_services import UsersServices
 from src.services.microservices.books_services import BooksServices
 from src.services.microservices.security_services import SecurityServices
+from src.services.microservices.search_services import SearchServices
 from sqlalchemy import Engine
 from dotenv import load_dotenv
 
-class CoreServices(UsersServices, BooksServices, SecurityServices):
+class CoreServices(UsersServices, BooksServices, SecurityServices, SearchServices):
     def __init__(self, engine: Engine) -> None:
         load_dotenv()
         self.engine = engine
