@@ -1,7 +1,7 @@
 import os
 from typing import Annotated, Optional, Union
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, Request, Response
+from fastapi.security import OAuth2PasswordBearer, APIKeyCookie
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session, joinedload
 from src.models.users_model import UsersModel
@@ -90,7 +90,7 @@ class UsersServices:
             encode_jwt = jwt.encode(to_encode, self.JWT_SECRET_KEY, algorithm='HS256')
             return encode_jwt
 
-    def get_current_user(self, token: Annotated[str, Depends(oauth2_scheme)]):
+    def get_current_user(self, response: Response, request: Request):
         """Obtiene el usuario actual a partir del token JWT.
 
         Args:
@@ -102,11 +102,12 @@ class UsersServices:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
         )
+        
+        key = request.cookies.get("access_token")
 
         try:
-            payload = jwt.decode(token, self.JWT_SECRET_KEY, algorithms=['HS256'])
+            payload = jwt.decode(key, self.JWT_SECRET_KEY, algorithms=['HS256'])
             email = payload.get('sub')
         except InvalidTokenError:
             raise credentials_exception

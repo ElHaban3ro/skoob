@@ -21,7 +21,7 @@ class UsersRouter:
         GOOGLE_TOKEN_REQUEST_URL = "https://oauth2.googleapis.com/token"
 
         @self.router.get('/me', tags=['Users'])
-        def get_me(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:        
+        def get_me(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:        
             user: UsersModel = user.serialize()
             return HttpResponses.standard_response(
                 response=response,
@@ -101,8 +101,23 @@ class UsersRouter:
                 )
             
             token = services.create_user_token(email, 'email')
-            status.HTTP_200_OK
-            return {'access_token': token, 'token_type': 'bearer'}
+            response.delete_cookie(
+                key="access_token",
+                httponly=True,
+                secure=False, # Require HTTP.
+                samesite='none', # Accept different site requests.
+            )
+            response.set_cookie(
+                key="access_token",
+                value=token,
+                httponly=True,
+                secure=False, # Require HTTP.
+                samesite='none', # Accept different site requests.
+                max_age=60*180 # 3 hours
+            )
+
+            response.status_code = status.HTTP_200_OK
+            return {'status': 'logged'}
 
         @self.router.get('/auth/google', tags=['Users'])
         def google_auth(response: Response) -> dict[str, object]:
@@ -209,5 +224,22 @@ class UsersRouter:
                 status_title='Ok',
                 content_response={
                     'content': user.serialize(return_books=False)
+                }
+            )
+        
+        @self.router.post('/logout', tags=['Users'])
+        def logout_user(response: Response) -> dict[str, object]:
+            response.delete_cookie(
+                key="access_token",
+                httponly=True,
+                secure=False, # Require HTTP.
+                samesite='none', # Accept different site requests.
+            )
+            return HttpResponses.standard_response(
+                response=response,
+                status_code=status.HTTP_200_OK,
+                status_title='Ok',
+                content_response={
+                    'content': 'Logged out successfully'
                 }
             )
