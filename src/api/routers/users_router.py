@@ -33,7 +33,7 @@ class UsersRouter:
             )
         
         @self.router.delete('/delete', tags=['Users'])
-        def delete_user(response: Response, user_id: int, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
+        def delete_user(response: Response, user_id: int, user = Depends(services.get_current_user)) -> dict[str, object]:
             user_to_delete = services.get_user_by_id(user_id)
             if not user_to_delete or user.role != 'admin' or user.email == user_to_delete.email:
                 return HttpResponses.standard_response(
@@ -54,11 +54,11 @@ class UsersRouter:
         @self.router.put('/edit', tags=['Users'])
         def edit_user(
             response: Response,
-            user: Annotated[str, Depends(services.get_current_user)],
             email: str,
             name: Union[str, None] = None,
             password: Union[str, None] = None,
-            image: Union[str, None] = None
+            image: Union[str, None] = None,
+            user = Depends(services.get_current_user),
         ) -> dict:
             if not services.user_exist(email):
                 return HttpResponses.standard_response(
@@ -182,7 +182,7 @@ class UsersRouter:
                 return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=google_auth_failed')
 
         @self.router.get('/all', tags=['Users'])
-        def get_all_users(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
+        def get_all_users(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:
             users = services.get_all_users()
             return HttpResponses.standard_response(
                 response=response,

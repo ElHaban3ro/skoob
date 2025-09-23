@@ -13,7 +13,7 @@ class BooksRouter:
         self.router: APIRouter = APIRouter() 
         
         @self.router.get('/content/{book_id:int}/{path_fragments:path}', tags=['Books'])
-        def book_content_resolve(response: Response, book_id: int, path_fragments: str, user: Annotated[str, Depends(services.get_current_user)]) -> FileResponse:
+        def book_content_resolve(response: Response, book_id: int, path_fragments: str, user = Depends(services.get_current_user)) -> FileResponse:
             """Resuelve y sirve archivos estáticos relacionados con los libros, como imágenes o estilos CSS.
 
             Args:
@@ -45,7 +45,7 @@ class BooksRouter:
             return FileResponse(path=resource_path, media_type=mimetypes.guess_type(resource_path)[0])
 
         @self.router.get('/get/cover', tags=['Books'])
-        def get_book_cover(response: Response, book_id: int, user: Annotated[str, Depends(services.get_current_user)]) -> FileResponse:
+        def get_book_cover(response: Response, book_id: int, user = Depends(services.get_current_user)) -> FileResponse:
             """Obtiene la portada de un libro.
 
             Args:
@@ -71,7 +71,7 @@ class BooksRouter:
             return FileResponse(path=Path(book.cover_path), media_type=mediatype)
 
         @self.router.get('/read', tags=['Books'])
-        def read_book(response: Response, book_id: int, chapter_number: int, user: Annotated[str, Depends(services.get_current_user)]) -> FileResponse:
+        def read_book(response: Response, book_id: int, chapter_number: int, user = Depends(services.get_current_user)) -> FileResponse:
             """Obtiene el contenido HTML de un capítulo específico de un libro.
 
             Args:
@@ -94,7 +94,7 @@ class BooksRouter:
             return FileResponse(path=Path(chapter_path), media_type=mediatype)
 
         @self.router.get('/get', tags=['Books'])
-        def get_book(response: Response, user: Annotated[str, Depends(services.get_current_user)], id: int) -> dict[str, object]:
+        def get_book(response: Response, id: int, user = Depends(services.get_current_user)) -> dict[str, object]:
             book = services.get_book(id)
             if not book:
                 return HttpResponses.standard_response(
@@ -112,7 +112,7 @@ class BooksRouter:
             )
         
         @self.router.get('/all', tags=['Books'])
-        def get_all_books(response: Response, user: Annotated[str, Depends(services.get_current_user)]) -> dict[str, object]:
+        def get_all_books(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:
             books = services.get_all_books()
             return HttpResponses.standard_response(
                 response=response,
@@ -124,7 +124,7 @@ class BooksRouter:
             )
         
         @self.router.delete('/delete', tags=['Books'])
-        def delete_book(response: Response, user: Annotated[str, Depends(services.get_current_user)], id: int) -> dict[str, object]:
+        def delete_book(response: Response, id: int, user = Depends(services.get_current_user)) -> dict[str, object]:
             book = services.get_book(id)
             if not book:
                 return HttpResponses.standard_response(
@@ -140,7 +140,7 @@ class BooksRouter:
             )
 
         @self.router.post('/upload', tags=['Books'])
-        def upload_book(response: Response, user: Annotated[str, Depends(services.get_current_user)], file: UploadFile = File(...)) -> dict[str, object]:
+        def upload_book(response: Response, user = Depends(services.get_current_user), file: UploadFile = File(...)) -> dict[str, object]:
             book = services.save_book(file, user) # Guarda el libro, valida su formato y más.
 
             return HttpResponses.standard_response(
