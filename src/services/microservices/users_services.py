@@ -18,38 +18,100 @@ class UsersServices:
         super().__init__()
         self.engine: Engine = self.engine
         self.JWT_SECRET_KEY: str = self.JWT_SECRET_KEY
+
+    def _norm_email(self, email: str) -> str:
+        return (email or "").strip().lower()
     
+    def _norm_username(self, username: str) -> str:
+        return (username or "").strip().lower()
+
+    def get_admin_env_index(self) -> dict:
+        from src.db.security.admin_seeds import admin_env_index
+        return admin_env_index()
+
+    def ensure_admin_from_username(self, username: str) -> UsersModel | None:
+        # Normalizamos el username para evitar problemas de mayúsculas/minúsculas y espacios
+        # buscamos en el índice de admins cargados desde variables de entorno
+        username = self._norm_username(username)
+        idx = self.get_admin_env_index()
+        admin_data = idx.get(username)
+        if not admin_data:
+            return None
+        email = self._norm_email(admin_data["email"])
+        name = admin_data["name"]
+        password = admin_data["password"]
+        self.create_admin_user_if_missing(name=name, email=email, password=password)
+        return self.get_user(email)
+
+
     def get_all_users(self) -> list[UsersModel]:
         with Session(self.engine) as session:
             return session.query(UsersModel).options(joinedload(UsersModel.books)).all()
         
     def get_user(self, email: str) -> Optional[UsersModel]:
+        # Normalizamos el email para evitar problemas de mayúsculas/minúsculas y espacios
+        email = self._norm_email(email)
         with Session(self.engine) as session:
-            return session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
-        
+            return (
+                session.query(UsersModel)
+                .filter(UsersModel.email.ilike(email))
+                .options(joinedload(UsersModel.books))
+                .first()
+            )
+            
     def get_user_by_id(self, user_id: int) -> Optional[UsersModel]:
         with Session(self.engine) as session:
             return session.query(UsersModel).filter(UsersModel.id == user_id).options(joinedload(UsersModel.books)).first()
 
     def user_exist(self, email: str) -> bool:
+        email = self._norm_email(email)
         with Session(self.engine) as session:
-            return True if session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first() else False
+            return bool(
+                session.query(UsersModel)
+                .filter(UsersModel.email.ilike(email))
+                .options(joinedload(UsersModel.books))
+                .first()
+            )
 
-    def create_admin_user(self, name: str, email: str, password: str, user_type: str = 'google', image: Optional[str] = None) -> UsersModel:
+    def create_admin_user_if_missing(self, name: str, email: str, password: str) -> bool:
+        email = self._norm_email(email)
         with Session(self.engine) as session:
+            exists = session.query(UsersModel).filter(UsersModel.email.ilike(email)).first()
+            if exists:
+                if exists.role != "admin":
+                    exists.role = "admin"
+                    if password:
+                        exists.password = SecurityServices.hash_password(password)
+                    session.commit()
+                return False
             new_user = UsersModel(
                 name=name,
                 email=email,
                 password=SecurityServices.hash_password(password),
-                image=image,
-                user_type=user_type,
-                role='admin'
+                image=None,
+                user_type="email",
+                role="admin",
             )
             session.add(new_user)
             session.commit()
-            session.refresh(new_user)
-            return new_user
-        
+            return True
+
+    def seed_admins(self, admins: list[dict]) -> dict:
+        # hace seed de admins y devuelve los creados y los que ya existian 
+        created, skipped = [], []
+        for a in admins:
+            ok = self.create_admin_user_if_missing(a["name"], a["email"], a["password"])
+            if ok:
+                created.append(a["email"])
+            else:
+                skipped.append(a["email"])
+        return {"created": created, "skipped": skipped}
+
+    def create_admin_user(self, name: str, email: str, password: str, user_type: str = 'email', image: Optional[str] = None) -> UsersModel:
+        self.create_admin_user_if_missing(name, email, password)
+        with Session(self.engine) as session:
+            return session.query(UsersModel).filter(UsersModel.email == email).first()
+   
     def create_user(self, name: str, email: str, image: Optional[str] = None, password: Union[str, None] = None, user_type: str = 'google', google_token: Union[str, None] = None) -> UsersModel:
         with Session(self.engine) as session:
             if password:
@@ -69,15 +131,22 @@ class UsersServices:
             return new_user
         
     def user_credentials_are_valid(self, email: str, password: str) -> bool:
+        email = self._norm_email(email)
         with Session(self.engine) as session:
-            user: UsersModel = session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
+            user = (
+                session.query(UsersModel)
+                .filter(UsersModel.email.ilike(email))
+                .options(joinedload(UsersModel.books))
+                .first()
+            )
             if not user:
                 return False
             return SecurityServices.verify_password(password, user.password)
         
     def create_user_token(self, email: str, type: str) -> str:
+        email = self._norm_email(email)
         with Session(self.engine) as session:
-            user = session.query(UsersModel).filter(UsersModel.email == email).first()
+            user = session.query(UsersModel).filter(UsersModel.email.ilike(email)).first()
             if not user:
                 return ''
 
@@ -89,7 +158,7 @@ class UsersServices:
 
             encode_jwt = jwt.encode(to_encode, self.JWT_SECRET_KEY, algorithm='HS256')
             return encode_jwt
-
+        
     def get_current_user(self, response: Response, request: Request):
         """Obtiene el usuario actual a partir del token JWT.
 
@@ -118,8 +187,14 @@ class UsersServices:
         return user
 
     def delete_user(self, email: str) -> bool:
+        email = self._norm_email(email)
         with Session(self.engine) as session:
-            user = session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
+            user = (
+                session.query(UsersModel)
+                .filter(UsersModel.email.ilike(email))
+                .options(joinedload(UsersModel.books))
+                .first()
+            )
             if not user:
                 return False
             session.delete(user)
@@ -127,14 +202,20 @@ class UsersServices:
             return True
         
     def edit_user(
-            self,
-            email: str,
-            name: Optional[str] = None,
-            password: Optional[str] = None,
-            image: Optional[str] = None
+        self,
+        email: str,
+        name: Optional[str] = None,
+        password: Optional[str] = None,
+        image: Optional[str] = None,
     ) -> UsersModel:
+        email = self._norm_email(email)
         with Session(self.engine) as session:
-            user = session.query(UsersModel).filter(UsersModel.email == email).options(joinedload(UsersModel.books)).first()
+            user = (
+                session.query(UsersModel)
+                .filter(UsersModel.email.ilike(email))
+                .options(joinedload(UsersModel.books))
+                .first()
+            )
             if name:
                 user.name = name
             if password:
@@ -144,3 +225,29 @@ class UsersServices:
             session.commit()
             session.refresh(user)
             return user
+        
+    def sync_admins(self, admins: list[dict], update_passwords: bool = False) -> dict:
+        created, updated = [], []
+        with Session(self.engine) as session:
+            for a in admins:
+                email = self._norm_email(a["email"])
+                user = session.query(UsersModel).filter(UsersModel.email.ilike(email)).first()
+                if user:
+                    user.role = "admin"
+                    if update_passwords:
+                        user.password = SecurityServices.hash_password(a["password"])
+                    session.commit()
+                    updated.append(email)
+                else:
+                    new_user = UsersModel(
+                        name=a["name"],
+                        email=email,
+                        password=SecurityServices.hash_password(a["password"]),
+                        image=None,
+                        user_type="email",
+                        role="admin",
+                    )
+                    session.add(new_user)
+                    session.commit()
+                    created.append(email)
+        return {"created": created, "updated": updated}

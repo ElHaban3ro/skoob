@@ -60,47 +60,44 @@ class UsersRouter:
             image: Union[str, None] = None,
             user = Depends(services.get_current_user),
         ) -> dict:
-            if not services.user_exist(email):
-                return HttpResponses.standard_response(
-                    response=response,
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    status_title='NotFound',
-                )
+            # Solo puede editarse a sí mismo
+            email = email
             edited_user = services.edit_user(
-                email=email,
-                name=name,
-                password=password,
-                image=image
+            email=email,
+            name=name,
+            password=password,
+            image=image
             )
             return HttpResponses.standard_response(
-                response=response,
-                status_code=status.HTTP_200_OK,
-                status_title='Ok',
-                content_response={
-                    'content': edited_user.serialize(return_books=False)
-                }
+            response=response,
+            status_code=status.HTTP_200_OK,
+            status_title='Ok',
+            content_response={
+                'content': edited_user.serialize(return_books=False)
+            }
             )
         
         @self.router.post('/auth', tags=['Users'])
         def auth(response: Response, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> dict[str, object]:
-            email = form_data.username
+            username = form_data.username.strip().lower()
             password = form_data.password
 
-            if not services.user_exist(email):
+            email_like = username
+            if not services.user_exist(email_like):
                 return HttpResponses.standard_response(
                     response=response,
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='NotFound',
                 )
-            
-            if not services.user_credentials_are_valid(email, password):
+
+            if not services.user_credentials_are_valid(email_like, password):
                 return HttpResponses.standard_response(
                     response=response,
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     status_title='Unauthorized',
                 )
             
-            token = services.create_user_token(email, 'email')
+            token = services.create_user_token(email_like, 'email')
             response.delete_cookie(
                 key="access_token",
                 httponly=True,
@@ -180,6 +177,7 @@ class UsersRouter:
                 return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=google_auth_failed')
             except Exception as e:
                 return RedirectResponse(f'{GOOGLE_REDIRECT_FRONTEND_URI}/login?error=google_auth_failed')
+
 
         @self.router.get('/all', tags=['Users'])
         def get_all_users(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:
