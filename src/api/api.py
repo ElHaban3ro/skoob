@@ -21,7 +21,7 @@ class FastApi:
             "https://tests.evasoft.app"
         ]
         load_dotenv()
-        self.app: FastAPI = FastAPI(debug=True)
+        self.app: FastAPI = FastAPI(debug=True, lifespan=self._lifespan)
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=self.origins,
@@ -31,7 +31,6 @@ class FastApi:
         )
         #self.app.add_middleware(SessionMiddleware, os.environ.get('GOOGLE_SECRET_KEY', 'KI'))
         self.services = services
-        self.app: FastAPI = FastAPI(debug=True, lifespan=self._lifespan)
         self.add_routers()
 
     @asynccontextmanager
