@@ -12,7 +12,7 @@ class AdminRouter:
         self.router: APIRouter = APIRouter(prefix=self.prefix, tags=["Admin"])
         self.services = services
 
-        def admin_required(user: Annotated[UsersModel, Depends(services.get_current_user)]) -> UsersModel:
+        def admin_required(user = Depends(services.get_current_user),) -> UsersModel:
             if not user or user.role != "admin":
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
             return user
