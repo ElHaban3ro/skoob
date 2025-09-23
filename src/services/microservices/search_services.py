@@ -8,7 +8,7 @@ class SearchType(TypedDict):
     raw_text: str
     text_with_citations: str
     citations: dict[str, dict[str, str]]
-    
+
 class SearchServices:
     def __init__(self) -> None:
         """Métodos para buscar contenido en internet.
@@ -21,9 +21,9 @@ class SearchServices:
         Returns:
             dict: Return the Gemini client.
         """
-        self.gemini_api_key = os.getenv('GOOGLE_GEMINI_API_KEY', '')
-        self.gemini_client = genai.Client(api_key=self.gemini_api_key)
-        return self.gemini_client
+        gemini_api_key = os.getenv('GOOGLE_GEMINI_API_KEY', '')
+        _gemini_client_ = genai.Client(api_key=gemini_api_key)
+        return _gemini_client_
 
     def setup_gemini_grounded(self) -> types.GenerationConfig:
         """Configura la solicitud para Gemini Grounded Search.
@@ -39,11 +39,13 @@ class SearchServices:
         )
         return config
     
-    def search_with_gemini(self, prompt: str, model: str = 'gemini-2.5-flash-lite') -> SearchType:
+    def search_with_gemini(self, prompt: str, model: str = 'gemini-2.5-flash-lite', search_type: str = 'definition') -> SearchType:
         """Realiza una búsqueda utilizando Gemini Grounded Search.
 
         Args:
             prompt (str): El prompt de búsqueda.
+            model (str, optional): El modelo de Gemini a utilizar. Defaults to 'gemini-2.5-flash-lite'.
+            search_type (str, optional): El tipo de búsqueda a realizar. Puede ser 'definition' o 'free'. Este parámetro de utilizará para moldear el prompt desde el front. Defaults to 'definition'.
 
         Returns:
             str: El resultado de la búsqueda.
@@ -52,7 +54,8 @@ class SearchServices:
         gemini_configs = self.setup_gemini_grounded() # Configuramos Gemini Grounded Search.
         response = gemini_client.models.generate_content( # Hacemos la búsqueda.
             model=model,
-            contents=[prompt],
+            #! DANTE, modificá tu promt acá!
+            contents=[f'Realiza una búsqueda en Google y responde de forma concisa y clara para definir lo necesario. Responde en el idioma del prompt. Sé corto y conciso. Búsqueda: {prompt}' if search_type == 'definition' else f'Realiza una búsqueda en Google y responde de forma creativa y detallada. Utiliza citas numeradas para referenciar las fuentes de información. Sé corto y conciso. Responde en el idioma del prompt.\n\nBúsqueda: {prompt}'],
             config=gemini_configs
         )
         # Extraemos los resultados y las citas.
