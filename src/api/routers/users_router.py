@@ -102,7 +102,7 @@ class UsersRouter:
                 key="access_token",
                 httponly=True,
                 secure=False, # Require HTTP.
-                samesite='none', # Accept different site requests.
+                samesite='lax', # Accept different site requests.
             )
             response.set_cookie(
                 key="access_token",
@@ -221,7 +221,7 @@ class UsersRouter:
                 key="access_token",
                 httponly=True,
                 secure=False, # Require HTTP.
-                samesite='none', # Accept different site requests.
+                samesite='lax', # Accept different site requests.
             )
             return HttpResponses.standard_response(
                 response=response,
