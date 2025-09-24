@@ -109,8 +109,8 @@ class UsersRouter:
                 value=token,
                 httponly=True,
                 secure=False, # Require HTTP.
-                samesite='none', # Accept different site requests.
-                max_age=60*180 # 3 hours
+                samesite='lax', # Accept different site requests.
+                max_age=180*180 # 3 hours
             )
 
             response.status_code = status.HTTP_200_OK
@@ -168,8 +168,8 @@ class UsersRouter:
                     value=local_token,
                     httponly=True,
                     secure=False, # Require HTTP.
-                    samesite='none', # Accept different site requests.
-                    max_age=60*180 # 3 hours
+                    samesite='lax', # Accept different site requests.
+                    max_age=180*180
                 )
                 return resp
 
