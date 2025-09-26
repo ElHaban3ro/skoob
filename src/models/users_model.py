@@ -25,7 +25,7 @@ class UsersModel(Base):
             'name': self.name,
             'email': self.email,
             'password': self.password if retireve_password else None,
-            'image': self.image if self.image else f'{API_URL}/default-avatar',
+            'image': self.image if self.image else f'{API_URL}/users/default-avatar',
             'type': self.user_type,
             'role': self.role,
             'books': [book.id for book in self.books] if return_books else []
