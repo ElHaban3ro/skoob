@@ -19,6 +19,7 @@ class AdminSeedSettings(BaseSettings):
     GOOGLE_GEMINI_API_KEY: str
     GOOGLE_REDIRECT_CALLBACK_URI: str
     GOOGLE_REDIRECT_FRONTEND_URI: str
+    API_URL: str
 
     ADMIN1_NAME: Optional[str] = None
     ADMIN1_EMAIL: Optional[EmailStr] = None
