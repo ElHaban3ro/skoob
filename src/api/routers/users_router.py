@@ -1,6 +1,6 @@
 import httpx
 import os
-from fastapi import APIRouter, status, Depends, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.responses import FileResponse, Response, RedirectResponse
 from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
@@ -20,8 +20,14 @@ class UsersRouter:
         GOOGLE_REDIRECT_FRONTEND_URI = os.getenv("GOOGLE_REDIRECT_FRONTEND_URI", "http://localhost:3000")
         GOOGLE_TOKEN_REQUEST_URL = "https://oauth2.googleapis.com/token"
 
+        def raise_authorized() -> None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You don't have permission to perform this action"
+            )
+
         @self.router.get('/default-avatar', tags=['Users'])
-        def get_user_avatar(response: Response) -> FileResponse:
+        def get_user_avatar(response: Response, user = Depends(services.get_current_user)) -> FileResponse:
             """Returns the default user avatar image.
 
             Returns:
@@ -71,6 +77,8 @@ class UsersRouter:
             user = Depends(services.get_current_user),
         ) -> dict:
             # Solo puede editarse a sí mismo
+            if user.email != email:
+                return raise_authorized()
             email = email
             edited_user = services.edit_user(
             email=email,
@@ -192,6 +200,8 @@ class UsersRouter:
         @self.router.get('/all', tags=['Users'])
         def get_all_users(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:
             users = services.get_all_users()
+            if user.role != 'admin':
+                raise raise_authorized()
             return HttpResponses.standard_response(
                 response=response,
                 status_code=status.HTTP_200_OK,

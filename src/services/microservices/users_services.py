@@ -159,7 +159,7 @@ class UsersServices:
             encode_jwt = jwt.encode(to_encode, self.JWT_SECRET_KEY, algorithm='HS256')
             return encode_jwt
         
-    def get_current_user(self, response: Response, request: Request):
+    def get_current_user(self, response: Response, request: Request) -> UsersModel:
         """Obtiene el usuario actual a partir del token JWT.
 
         Args:
