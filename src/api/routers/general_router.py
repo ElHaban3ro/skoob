@@ -24,7 +24,3 @@ class GeneralRouter:
                     'ping': 'pong'
                 }
             )
-        
-        @self.router.get('/auth/google/auth-template', tags=['General'])
-        def google_auth_template(response: Response, request: Request) -> dict[str, object]:
-            return FileResponse('content/templates/google/auth_template.html', media_type='text/html')

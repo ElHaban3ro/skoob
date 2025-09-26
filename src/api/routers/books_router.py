@@ -1,5 +1,5 @@
 import mimetypes
-from fastapi import APIRouter, status, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
 from fastapi.responses import Response, FileResponse
 from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
@@ -11,6 +11,11 @@ class BooksRouter:
     def __init__(self, services: CoreServices) -> None:
         self.prefix: str = '/books'
         self.router: APIRouter = APIRouter() 
+        def raise_authorized() -> None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You don't have permission to perform this action"
+            )
         
         @self.router.get('/content/{book_id:int}/{path_fragments:path}', tags=['Books'])
         def book_content_resolve(response: Response, book_id: int, path_fragments: str, user = Depends(services.get_current_user)) -> FileResponse:
@@ -26,6 +31,10 @@ class BooksRouter:
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='BookNotFound',
                 )
+            
+            # Solo el usuario puede acceder a su propio recurso.
+            if book.owner_id != user.id:
+                return raise_authorized()
             
             resource_relative_path = PurePosixPath(path_fragments)  # Normaliza la ruta para evitar problemas de seguridad
             resource_path = (Path(book.opf_path).parent.resolve() / resource_relative_path).resolve()
@@ -67,6 +76,10 @@ class BooksRouter:
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='CoverNotFound',
                 )
+            
+            if book.owner_id != user.id:
+                return raise_authorized()
+
             mediatype, _ = mimetypes.guess_type(book.cover_path)
             return FileResponse(path=Path(book.cover_path), media_type=mediatype)
 
@@ -88,8 +101,10 @@ class BooksRouter:
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='BookNotFound',
                 )
-            chapter_path = services.read_book(book_id, chapter_number)
+            if book.owner_id != user.id:
+                return raise_authorized()
 
+            chapter_path = services.read_book(book_id, chapter_number)
             mediatype, _ = mimetypes.guess_type(chapter_path)
             return FileResponse(path=Path(chapter_path), media_type=mediatype)
 
@@ -102,6 +117,10 @@ class BooksRouter:
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='BookNotFound',
                 )
+            
+            if book.owner_id != user.id:
+                return raise_authorized()
+            
             return HttpResponses.standard_response(
                 response=response,
                 status_code=status.HTTP_200_OK,
@@ -113,7 +132,8 @@ class BooksRouter:
         
         @self.router.get('/all', tags=['Books'])
         def get_all_books(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:
-            books = services.get_all_books()
+            """Devuelve los libros del usuario autenticado."""
+            books = services.get_all_my_books(user)
             return HttpResponses.standard_response(
                 response=response,
                 status_code=status.HTTP_200_OK,
@@ -132,6 +152,10 @@ class BooksRouter:
                     status_code=status.HTTP_404_NOT_FOUND,
                     status_title='BookNotFound',
                 )
+            
+            if book.owner_id != user.id:
+                return raise_authorized()
+            
             services.delete_book(book.id)
             return HttpResponses.standard_response(
                 response=response,

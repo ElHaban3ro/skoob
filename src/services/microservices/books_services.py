@@ -277,6 +277,11 @@ class BooksServices:
             books = session.query(BooksModel).all()
             return books
         
+    def get_all_my_books(self, user: UsersModel) -> list[BooksModel]:
+        with Session(self.engine) as session:
+            books = session.query(BooksModel).filter(BooksModel.owner_id == user.id).all()
+            return books
+        
     def delete_book(self, id: int) -> bool:
         with Session(self.engine) as session:
             book = session.query(BooksModel).filter(BooksModel.id == id).first()
