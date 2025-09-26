@@ -1,7 +1,7 @@
 import httpx
 import os
 from fastapi import APIRouter, status, Depends, Request
-from fastapi.responses import Response, RedirectResponse
+from fastapi.responses import FileResponse, Response, RedirectResponse
 from src.services.core_services import CoreServices
 from src.utils.http.response_utils import HttpResponses
 from src.models.users_model import UsersModel
@@ -19,6 +19,16 @@ class UsersRouter:
         GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_CALLBACK_URI", "http://localhost:3030/users/auth/google/callback")
         GOOGLE_REDIRECT_FRONTEND_URI = os.getenv("GOOGLE_REDIRECT_FRONTEND_URI", "http://localhost:3000")
         GOOGLE_TOKEN_REQUEST_URL = "https://oauth2.googleapis.com/token"
+
+        @self.router.get('/default-avatar', tags=['Users'])
+        def get_user_avatar(response: Response) -> FileResponse:
+            """Returns the default user avatar image.
+
+            Returns:
+                FileResponse: The default avatar image file response.
+            """
+            image_path = './content/images/default_user.jpeg'
+            return FileResponse(image_path, media_type='image/jpeg')
 
         @self.router.get('/me', tags=['Users'])
         def get_me(response: Response, user = Depends(services.get_current_user)) -> dict[str, object]:        
