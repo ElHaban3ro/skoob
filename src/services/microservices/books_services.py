@@ -1,5 +1,8 @@
+import codecs
+import io
 import os
 from pathlib import Path, PosixPath
+import re
 import shutil
 from typing import Annotated, Optional, Union
 from fastapi import HTTPException, status
@@ -36,6 +39,44 @@ class BooksServices:
 
         self.engine: Engine = self.engine
 
+    @staticmethod
+    def parse_xhtml_strict_or_html(path: str):
+        """
+    Parsea un archivo XML/XHTML de forma estricta y, si falla, lo parsea como HTML tolerante.
+
+    Argumentos
+    ----------
+    path : str
+        Ruta al fichero que se va a leer y parsear. Se abre en modo binario.
+
+    Comportamiento
+    --------------
+    - Lee todo el contenido en bytes.
+    - Elimina un marcador BOM UTF-8 inicial si existe y recorta espacios en blanco iniciales.
+    - Si hay más de una declaración XML ("<?xml ...?>") mantiene la primera y elimina las declaraciones posteriores (usa una expresión regular sobre bytes).
+    - Intenta parsear el contenido con un parser XML estricto (lxml.etree.XMLParser con recover=False y remove_blank_text=True).
+    - Si lxml lanza una XMLSyntaxError, hace fallback a un parseo estilo HTML (lxml.html.parse), más permisivo.
+
+    Valor devuelto
+    --------------
+    Un objeto ElementTree de lxml que representa el árbol DOM parseado. Según el flujo, será un árbol XML estricto o un árbol HTML tolerante.
+    """
+        with open(path, 'rb') as f:
+            data = f.read()
+        if data.startswith(codecs.BOM_UTF8):
+            data = data[len(codecs.BOM_UTF8):]
+        data = data.lstrip()
+        if data.count(b'<?xml') > 1:
+            first = data.find(b'<?xml')
+            end = data.find(b'?>', first) + 2
+            tail = re.sub(br'\s*<\?xml[^?]*\?>', b'', data[end:])
+            data = data[:end] + tail
+        try:
+            parser = etree.XMLParser(recover=False, remove_blank_text=True)
+            return etree.parse(io.BytesIO(data), parser)
+        except etree.XMLSyntaxError:
+            return html.parse(io.BytesIO(data))
+        
     def save_book(self, file: UploadFile, user: UsersModel) -> BooksModel:
         path = Path(file.filename) # lo convertimos a formato path.
         if path.suffix not in self.books_sufix: # verificamos que el formato sea correcto.
@@ -118,7 +159,7 @@ class BooksServices:
         ns = {"xlink": "http://www.w3.org/1999/xlink"}
         for chapter in book.book_content:
             chapter_path = Path(chapter)
-            tree = html.parse(chapter_path)
+            tree = self.parse_xhtml_strict_or_html(str(chapter_path))
             src_nodes = tree.xpath("//*[@src]")
             for node in src_nodes:
                 src = node.get("src")
@@ -136,7 +177,7 @@ class BooksServices:
                 node.set('href', f"{self.books_content_prefix}/{book.id}{href}")
             tree.write(chapter_path, encoding='utf-8', method='xml', pretty_print=True)
             
-            xml_tree = etree.parse(chapter_path)
+            xml_tree = self.parse_xhtml_strict_or_html(str(chapter_path))
             xlinkhref_nodes = xml_tree.xpath(f"//*[@xlink:href]", namespaces=ns)
             for node in xlinkhref_nodes:
                 xlinkhref = node.get(f"{{{ns['xlink']}}}href")

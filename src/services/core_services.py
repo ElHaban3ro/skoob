@@ -3,6 +3,7 @@ from src.services.microservices.users_services import UsersServices
 from src.services.microservices.books_services import BooksServices
 from src.services.microservices.security_services import SecurityServices
 from src.services.microservices.search_services import SearchServices
+from src.services.microservices.gemini_services import GeminiServices
 from sqlalchemy import Engine
 from dotenv import load_dotenv
 
@@ -12,3 +13,4 @@ class CoreServices(UsersServices, BooksServices, SecurityServices, SearchService
         self.engine = engine
         self.JWT_SECRET_KEY: str = os.getenv('JWT_SECRET_KEY', 'supersecretkey')
         super().__init__()
+        self.gemini = GeminiServices(engine=self.engine)
